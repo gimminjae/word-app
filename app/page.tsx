@@ -66,6 +66,7 @@ export default function Home() {
   const [selectedTestIds, setSelectedTestIds] = useState<number[]>([1]);
   const [testRangeStart, setTestRangeStart] = useState(1);
   const [testRangeEnd, setTestRangeEnd] = useState(Math.min(10, verses.length));
+  const [testOrder, setTestOrder] = useState<number[]>([]);
   const [testIndex, setTestIndex] = useState(0);
   const [testConfigured, setTestConfigured] = useState(false);
   const [answer, setAnswer] = useState("");
@@ -73,7 +74,8 @@ export default function Home() {
   const [submitted, setSubmitted] = useState(false);
 
   const selectedVerse = verses.find((verse) => verse.id === selectedId) ?? verses[0];
-  const testIds = testSelectionMode === "range" ? verses.filter((verse) => verse.id >= Math.min(testRangeStart, testRangeEnd) && verse.id <= Math.max(testRangeStart, testRangeEnd)).map((verse) => verse.id) : selectedTestIds;
+  const availableTestIds = testSelectionMode === "range" ? verses.filter((verse) => verse.id >= Math.min(testRangeStart, testRangeEnd) && verse.id <= Math.max(testRangeStart, testRangeEnd)).map((verse) => verse.id) : selectedTestIds;
+  const testIds = testConfigured && testOrder.length > 0 ? testOrder : availableTestIds;
   const testId = testIds[testIndex] ?? testIds[0] ?? 1;
   const testVerse = verses.find((verse) => verse.id === testId) ?? verses[0];
   const pageVerses = verses.slice((page - 1) * pageSize, page * pageSize);
@@ -107,7 +109,19 @@ export default function Home() {
     setPracticeVerseId(nextId);
     setPracticeAnswer("");
   }
-  function startTest() { setTestIndex(0); setSubmitted(false); setAnswer(""); setSelectedOption(""); setTestConfigured(true); }
+  function startTest() {
+    const shuffledIds = [...availableTestIds];
+    for (let index = shuffledIds.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffledIds[index], shuffledIds[randomIndex]] = [shuffledIds[randomIndex], shuffledIds[index]];
+    }
+    setTestOrder(shuffledIds);
+    setTestIndex(0);
+    setSubmitted(false);
+    setAnswer("");
+    setSelectedOption("");
+    setTestConfigured(true);
+  }
   function toggleTestId(id: number) { setSelectedTestIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id].sort((first, second) => first - second)); }
   function nextTestQuestion() { setTestIndex((current) => current + 1); setSubmitted(false); setAnswer(""); setSelectedOption(""); }
   function selectView(nextView: View) { setView(nextView); setSubmitted(false); setAnswer(""); setSelectedOption(""); if (nextView === "practice") { setPracticeStarted(false); setPracticeAnswer(""); } if (nextView === "test") setTestConfigured(false); }
