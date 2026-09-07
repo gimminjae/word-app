@@ -89,10 +89,9 @@ export default function Home() {
   const practiceWrongCount = practiceResult.filter((item) => !item.correct && item.confirmed).length;
   const isReferenceCorrect = selectedOption === testVerse.reference;
   const referenceOptions = useMemo(() => {
-    const distractors = verses.filter((verse) => verse.id !== testVerse.id);
-    const offset = (testVerse.id * 3) % distractors.length;
-    return [testVerse.reference, ...Array.from({ length: 4 }, (_, index) => distractors[(offset + index) % distractors.length].reference)];
-  }, [testVerse.id, testVerse.reference]);
+    const selectedVerses = testIds.map((id) => verses.find((verse) => verse.id === id)).filter((verse): verse is NonNullable<typeof verse> => Boolean(verse)).filter((verse) => verse.id !== testVerse.id);
+    return [testVerse.reference, ...selectedVerses.slice(0, 4).map((verse) => verse.reference)];
+  }, [testIds, testVerse.id, testVerse.reference]);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
